@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hosted Tokenization Sample</title>
+
+  <script src="https://tokenization.develop.accept.blue/tokenization/v0.2"></script>
+</head>
+
+<style>
+  #tokenization-iframe {
+    border: 1px solid blue;
+
+    #card {
+      border: 1px solid red;
+    }
+  }
+</style>
+
+<body>
+  <form>
+    <div>
+      <div>
+        <label>Name<br /><input id="name" name="name" value="John Doe" /></label>
+      </div>
+
+      <div>
+        <label>Amount<br /><input id="amount" name="amount" value="5" /></label>
+      </div>
+    </div>
+
+    <div id="iframe-container"></div>
+
+    <div id="error-message"></div>
+
+    <div>Masked Card #: <span id="masked-card"></span></div>
+    <div>Masked CVV2: <span id="masked-cvv2"></span></div>
+
+    <div>
+      <button type="button" id="charge">Charge</button>
+    </div>
+  </form>
+
+  <script defer>
+    const chargeButton = document.querySelector('#charge');
+    const nameEl = document.querySelector('#name');
+    const amountEl = document.querySelector('#amount');
+    const iframeContainerEl = document.querySelector('#iframe-container');
+    const errorMessageEl = document.querySelector('#error-message');
+    const maskedCardEl = document.querySelector('#masked-card');
+    const maskedCvv2El = document.querySelector('#masked-cvv2');
+
+
+    const publicSourceKey = 'pk_l100LekXwKFRQFZIrJ7OcMtT96SCI'
+    const hostedTokenization = new window.HostedTokenization(publicSourceKey);
+
+    const cardForm = hostedTokenization.create('card-form')
+      .mount('#iframe-container')
+      .on('input', _onEvent)
+      .on('change', _onEvent);
+
+    cardForm.setStyles({
+      container: "display: flex; flex-direction: column;",
+      card: 'border: 2px solid red;',
+      expiryContainer: 'border: 1px solid green; width: fit-content;',
+      cvv2: 'border: 1px solid blue;'
+    })
+
+    const onChargeClick = async () => {
+      const result = await cardForm.getNonceToken()
+      console.log("Nonce token: ", result)
+      window.alert("NONCE TOKEN: ", result.nonce)
+    }
+
+    chargeButton.addEventListener('click', onChargeClick);
+
+    function _onEvent(event) {
+      console.log(event.error);
+      maskedCardEl.innerText = (event.result && event.result.maskedCard) || '';
+      maskedCvv2El.innerText = (event.result && event.result.maskedCvv2) || '';
+    }
+  </script>
+
+</body>
+
+</html>

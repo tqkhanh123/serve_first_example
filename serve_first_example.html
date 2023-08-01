@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hosted Tokenization Sample</title>
+
+  <script src="https://tokenization.develop.accept.blue/tokenization/v0.2"></script>
+
+</head>
+
+<style>
+  #tokenization-iframe {
+    border: 1px solid blue;
+
+    #card {
+      border: 1px solid red;
+    }
+  }
+</style>
+
+<body>
+  <form>
+    <div style="margin-bottom: 10px;">
+      <div>
+        <label>Name<br /><input id="name" name="name" value="John Doe" /></label>
+      </div>
+
+      <div>
+        <label>Amount<br /><input id="amount" name="amount" value="5" /></label>
+      </div>
+
+      <div>
+        <label>Routing number<br /><input id="routing_number" name="routing_number" value="" /></label>
+      </div>
+
+      <div>
+        <label>Account_number<br /><input id="account_number" name="account_number" value="" /></label>
+      </div>
+    </div>
+
+    <div id="iframe-container"></div>
+
+    <div id="error-message"></div>
+
+    <div>Masked Card #: <span id="masked-card"></span></div>
+    <div>Masked CVV2: <span id="masked-cvv2"></span></div>
+    <div>Info received: <span id="info"></span></div>
+    <div>
+      <button type="button" id="charge">Charge</button>
+    </div>
+  </form>
+
+  <script defer>
+    const chargeButton = document.querySelector('#charge');
+    const nameEl = document.querySelector('#name');
+    const amountEl = document.querySelector('#amount');
+    const routingNumberEl = document.querySelector('#routing_number');
+    const accountNumberEl = document.querySelector('#account_number');
+
+    const iframeContainerEl = document.querySelector('#iframe-container');
+    const errorMessageEl = document.querySelector('#error-message');
+    const maskedCardEl = document.querySelector('#masked-card');
+    const maskedCvv2El = document.querySelector('#masked-cvv2');
+    const infoEl = document.querySelector('#info');
+
+    const publicSourceKey = 'pk_l100LekXwKFRQFZIrJ7OcMtT96SCI'
+    const hostedTokenization = new window.HostedTokenization(publicSourceKey);
+
+    const cardForm = hostedTokenization.create('card-form')
+      .mount('#iframe-container')
+      .on('input', _onEvent)
+      .on('change', _onEvent);
+
+    cardForm.setStyles({
+      card: 'border: 2px solid red;'
+    })
+
+    const onChargeClick = async () => {
+      try {
+        const data = await cardForm.getData()
+        const info = {
+          ...data.result,
+          routingNumber: routingNumberEl.value,
+          accountNumber: accountNumberEl.value,
+          name: nameEl.value,
+          amount: amountEl.value
+        }
+        infoEl.innerText = JSON.stringify(info)
+
+        // const axiosResponse = await fetch('https://api.sandbox.mysfsgateway.com/api/v2/', {
+        //   method: 'POST',
+        //   mode: 'cors',
+        //   body: JSON.stringify(info)
+        // })
+        // console.log("RESPONSE: ", axiosResponse)
+      } catch (error) {
+        window.alert("ERROR: ", JSON.stringify(error))
+      }
+    }
+
+    chargeButton.addEventListener('click', onChargeClick);
+
+    function _onEvent(event) {
+      console.log(event.error);
+      maskedCardEl.innerText = (event.result && event.result.maskedCard) || '';
+      maskedCvv2El.innerText = (event.result && event.result.maskedCvv2) || '';
+    }
+  </script>
+
+</body>
+
+</html>
